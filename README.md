@@ -5,7 +5,7 @@
 Install the required dependencies:
 ```bash
 sudo apt update && sudo apt upgrade -y
-sudo apt install -y python3-pip
+sudo apt install -y python3-invoke python3-pip
 ```
 
 Initialise the virtual environment:
@@ -15,12 +15,12 @@ source ./bin/workon.sh
 
 Now configure the APT repos:
 ```bash
-inv sgx.configure
+sudo inv sgx.configure
 ```
 
 Install the remaining dependencies:
 ```bash
-sudo apt install -y \
+sudo apt update && sudo apt install -y \
     az-dcap-client \
     dkms \
     libsgx-quote-ex \
