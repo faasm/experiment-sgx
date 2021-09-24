@@ -1,7 +1,7 @@
 from invoke import task
 from requests import get
 from subprocess import check_output, run
-from tasks.util.env import BIN_DIR
+from tasks.util.env import BIN_DIR, SGX_INSTALL_DIR
 
 
 def do_configure(repo_url, write_file, key_url):
