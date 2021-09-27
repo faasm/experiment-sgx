@@ -14,7 +14,7 @@ def do_configure(repo_url, write_file, key_url):
 
 
 @task
-def configure(ctx):
+def configure():
     # Configure Intel APT repo
     do_configure(
         "https://download.01.org/intel-sgx/sgx_repo/ubuntu",
@@ -45,7 +45,7 @@ def do_install(url, fname):
 
 
 @task
-def install_dcap(ctx):
+def install_dcap():
     print("Installing Intel SGX DCAP driver...")
     do_install(
         "https://download.01.org/intel-sgx/sgx-dcap/1.4/linux/distro/ubuntuServer18.04/sgx_linux_x64_driver_1.21.bin",
@@ -54,7 +54,7 @@ def install_dcap(ctx):
 
 
 @task
-def install_sgxsdk(ctx):
+def install_sgxsdk():
     print("Installing Intel SGX SDK...")
     do_install(
         "https://download.01.org/intel-sgx/sgx-dcap/1.4/linux/distro/ubuntuServer18.04/sgx_linux_x64_sdk_2.8.100.3.bin",
@@ -67,6 +67,6 @@ def install_sgxsdk(ctx):
 
 
 @task
-def install(ctx):
+def install():
     install_dcap(ctx)
     install_sgxsdk(ctx)
