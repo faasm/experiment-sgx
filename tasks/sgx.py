@@ -48,7 +48,7 @@ def do_install(url, fname):
 def install_dcap():
     print("Installing Intel SGX DCAP driver...")
     do_install(
-        "https://download.01.org/intel-sgx/sgx-dcap/1.4/linux/distro/ubuntuServer18.04/sgx_linux_x64_driver_1.21.bin",
+        "https://download.01.org/intel-sgx/sgx-dcap/1.9/linux/distro/ubuntu18.04-server/sgx_linux_x64_driver_1.36.2.bin",
         "sgx_linux_x64_driver.bin",
     )
 
@@ -57,7 +57,7 @@ def install_dcap():
 def install_sgxsdk():
     print("Installing Intel SGX SDK...")
     do_install(
-        "https://download.01.org/intel-sgx/sgx-dcap/1.4/linux/distro/ubuntuServer18.04/sgx_linux_x64_sdk_2.8.100.3.bin",
+        "https://download.01.org/intel-sgx/sgx-dcap/1.9/linux/distro/ubuntu18.04-server/sgx_linux_x64_sdk_2.12.100.3.bin",
         "sgx_linux_x64_sdk.bin",
     )
 
