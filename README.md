@@ -5,7 +5,10 @@
 Install the required dependencies:
 ```bash
 sudo apt update && sudo apt upgrade -y
-sudo apt install -y python3-invoke python3-pip
+sudo apt install -y \
+    python3-invoke \
+    python3-pip \
+    python3-venv
 ```
 
 Initialise the virtual environment:

@@ -62,11 +62,11 @@ def install_sgxsdk():
     )
 
     # Update .bashrc
-    with open("~/.bashrc", "a") as f:
+    with open("/home/faasm/.bashrc", "a") as f:
         f.write("source {}/sgxddk/environment\n".format(SGX_INSTALL_DIR))
 
 
 @task
 def install():
-    install_dcap(ctx)
-    install_sgxsdk(ctx)
+    install_dcap()
+    install_sgxsdk()

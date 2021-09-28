@@ -1,3 +1,4 @@
+black
 hoststats==0.0.8
 invoke==1.5.0
 requests==2.26.0
