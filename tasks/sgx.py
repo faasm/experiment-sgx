@@ -65,8 +65,13 @@ def install_sgxsdk():
     with open("/home/faasm/.bashrc", "a") as f:
         f.write("source {}/sgxddk/environment\n".format(SGX_INSTALL_DIR))
 
+@task
+def install_net_core_sdk():
+    run("apt update", shell=True)
+    run("apt install -y dotnet-sdk-5.0", shell=True)
 
 @task
 def install():
     install_dcap()
     install_sgxsdk()
+    install_net_core_sdk()
