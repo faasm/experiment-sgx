@@ -68,7 +68,7 @@ def install_sgxsdk():
 @task
 def install_net_core_sdk():
     run("apt update", shell=True)
-    run("apt install -y dotnet-sdk-5.0", shell=True)
+    run("apt install -y dotnet-sdk-3.1", shell=True)
 
 @task
 def install():
