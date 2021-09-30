@@ -81,3 +81,17 @@ def install():
     install_sgxsdk()
     install_net_core_sdk()
     clone_azure_attesation_repo()
+
+@task
+def generate_quotes():
+    run("cd /opt/maa/intel.sdk.attest.sample/genquotes && AZDCAP_DEBUG_LOG_LEVEL=INFO bash ./runall.sh", shell=True)
+
+#verifies quotes with the MAA
+@task
+def verify_quotes():
+    run("cd /opt/maa/intel.sdk.attest.sample/validatequotes.core && bash ./runall.sh", shell=True)
+
+@task
+def demo():
+    generate_quotes()
+    verify_quotes()
