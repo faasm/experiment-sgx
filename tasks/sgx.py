@@ -71,16 +71,15 @@ def install_net_core_sdk():
     run("apt install -y dotnet-sdk-3.1", shell=True)
 
 @task
-def clone_azure_attesation_repo():
-    run("rm -rf /opt/maa", shell=True)
-    run("git clone https://github.com/Azure-Samples/microsoft-azure-attestation.git /opt/maa", shell=True)
-
-@task
 def install():
     install_dcap()
     install_sgxsdk()
     install_net_core_sdk()
-    clone_azure_attesation_repo()
+
+@task
+def clone_azure_attesation_repo():
+    run("rm -rf /opt/maa", shell=True)
+    run("git clone https://github.com/Azure-Samples/microsoft-azure-attestation.git /opt/maa", shell=True)
 
 @task
 def generate_quotes():
@@ -93,5 +92,6 @@ def verify_quotes():
 
 @task
 def demo():
+    clone_azure_attesation_repo()
     generate_quotes()
     verify_quotes()
