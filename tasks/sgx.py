@@ -2,6 +2,7 @@ from invoke import task
 from requests import get
 from subprocess import check_output, run
 from tasks.util.env import BIN_DIR, SGX_INSTALL_DIR
+import os
 
 
 def do_configure(repo_url, write_file, key_url):
@@ -43,6 +44,9 @@ def do_install(url, fname):
     # Run
     run(full_path)
 
+def dcap_driver_installed():
+    r = run("lsmod | grep intel_sgx", shell=True)
+    return r.returncode == 0
 
 @task
 def install_dcap():
@@ -73,8 +77,15 @@ def install_net_core_sdk():
 
 @task
 def install():
-    install_dcap()
-    install_sgxsdk()
+    if dcap_driver_installed():
+        print("DCAP Driver installed. Skipping installation!")
+    else:
+        install_dcap()
+
+    if os.path.isfile('/opt/intel/sgxsdk/environment'):
+        print("SGX SDK installed. Skipping installation!")
+    else:
+        install_sgxsdk()
     install_net_core_sdk()
 
 @task
