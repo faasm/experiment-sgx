@@ -15,7 +15,10 @@ def do_configure(repo_url, write_file, key_url):
 
 
 @task
-def configure():
+def configure(ctx):
+    """
+    Configure Intel and Microsoft APT repos
+    """
     # Configure Intel APT repo
     do_configure(
         "https://download.01.org/intel-sgx/sgx_repo/ubuntu",
@@ -39,26 +42,35 @@ def do_install(url, fname):
         f.write(r.content)
 
     # Make executable
-    run("chmod a+x {}".format(full_path), shell=True)
+    run("chmod a+x {}".format(full_path), check=True, shell=True)
 
     # Run
     run(full_path)
 
 
-def dcap_driver_installed():
-    r = run("lsmod | grep intel_sgx", shell=True)
-    return r.returncode == 0
+def is_driver_installed(driver):
+    if driver == "dcap":
+        r = run("lsmod | grep intel_sgx", shell=True, check=True)
+        return r.returncode == 0
+    elif driver == "sgx":
+        return os.path.isfile("/opt/intel/sgxsdk/environment")
+    else:
+        raise RuntimeError(
+            "Don't know how to check if driver '{}' is installed".format(
+                driver
+            )
+        )
 
 
 def clone_azure_attestation_repo():
-    run("rm -rf /opt/maa", shell=True)
+    run("rm -rf /opt/maa", check=True, shell=True)
     run(
         "git clone https://github.com/Azure-Samples/microsoft-azure-attestation.git /opt/maa",
         shell=True,
+        check=True,
     )
 
 
-@task
 def install_dcap():
     print("Installing Intel SGX DCAP driver...")
     do_install(
@@ -67,10 +79,11 @@ def install_dcap():
     )
 
 
-@task
 def install_sgxsdk():
     print("Installing Intel SGX SDK...")
-    run("mkdir /opt/intel", shell=True)  # ensure directory exists
+    run(
+        "mkdir -p /opt/intel", check=True, shell=True
+    )  # ensure directory exists
     do_install(
         "https://download.01.org/intel-sgx/sgx-dcap/1.9/linux/distro/ubuntu18.04-server/sgx_linux_x64_sdk_2.12.100.3.bin",
         "sgx_linux_x64_sdk.bin",
@@ -81,20 +94,22 @@ def install_sgxsdk():
         f.write("source {}/sgxddk/environment\n".format(SGX_INSTALL_DIR))
 
 
-@task
 def install_net_core_sdk():
-    run("apt update", shell=True)
-    run("apt install -y dotnet-sdk-3.1", shell=True)
+    run("apt update", shell=True, check=True)
+    run("apt install -y dotnet-sdk-3.1", shell=True, check=True)
 
 
 @task
-def install():
-    if dcap_driver_installed():
+def install(ctx):
+    """
+    Install SGX drivers
+    """
+    if is_driver_installed("dcap"):
         print("DCAP Driver installed. Skipping installation!")
     else:
         install_dcap()
 
-    if os.path.isfile("/opt/intel/sgxsdk/environment"):
+    if is_driver_installed("sgx"):
         print("SGX SDK installed. Skipping installation!")
     else:
         install_sgxsdk()
@@ -102,24 +117,27 @@ def install():
     clone_azure_attestation_repo()
 
 
-@task
-def generate_quotes():
+def demo_generate_quotes():
     run(
         "cd /opt/maa/intel.sdk.attest.sample/genquotes && AZDCAP_DEBUG_LOG_LEVEL=INFO bash ./runall.sh",
         shell=True,
+        check=True,
     )
 
 
 # verifies quotes with the MAA
-@task
-def verify_quotes():
+def demo_verify_quotes():
     run(
         "cd /opt/maa/intel.sdk.attest.sample/validatequotes.core && bash ./runall.sh",
         shell=True,
+        check=True,
     )
 
 
 @task
-def demo():
-    generate_quotes()
-    verify_quotes()
+def demo(ctx):
+    """
+    Run demo attestation validation
+    """
+    demo_generate_quotes()
+    demo_verify_quotes()
