@@ -33,7 +33,7 @@ sudo apt update && sudo apt install -y \
     libsgx-dcap-ql-dev \
     libssl-dev
 ```
-Finally, install dependencies. This installes the DCAP driver, the SGX SDK and the .NET Core SDK)
+Finally, install dependencies. This installes the DCAP driver, the SGX SDK and the .NET Core SDK (if necessary) and clones [this repo](https://github.com/Azure-Samples/microsoft-azure-attestation/).
 ```bash
 inv sgx.install
 ```

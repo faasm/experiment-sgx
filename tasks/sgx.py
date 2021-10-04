@@ -48,6 +48,10 @@ def dcap_driver_installed():
     r = run("lsmod | grep intel_sgx", shell=True)
     return r.returncode == 0
 
+def clone_azure_attestation_repo():
+    run("rm -rf /opt/maa", shell=True)
+    run("git clone https://github.com/Azure-Samples/microsoft-azure-attestation.git /opt/maa", shell=True)
+
 @task
 def install_dcap():
     print("Installing Intel SGX DCAP driver...")
@@ -87,11 +91,7 @@ def install():
     else:
         install_sgxsdk()
     install_net_core_sdk()
-
-@task
-def clone_azure_attesation_repo():
-    run("rm -rf /opt/maa", shell=True)
-    run("git clone https://github.com/Azure-Samples/microsoft-azure-attestation.git /opt/maa", shell=True)
+    clone_azure_attestation_repo()
 
 @task
 def generate_quotes():
@@ -104,6 +104,5 @@ def verify_quotes():
 
 @task
 def demo():
-    clone_azure_attesation_repo()
     generate_quotes()
     verify_quotes()
