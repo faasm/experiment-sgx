@@ -56,6 +56,7 @@ def install_dcap():
 @task
 def install_sgxsdk():
     print("Installing Intel SGX SDK...")
+    run("mkdir /opt/intel", shell=True) #ensure directory exists
     do_install(
         "https://download.01.org/intel-sgx/sgx-dcap/1.9/linux/distro/ubuntu18.04-server/sgx_linux_x64_sdk_2.12.100.3.bin",
         "sgx_linux_x64_sdk.bin",
