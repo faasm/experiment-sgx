@@ -44,13 +44,19 @@ def do_install(url, fname):
     # Run
     run(full_path)
 
+
 def dcap_driver_installed():
     r = run("lsmod | grep intel_sgx", shell=True)
     return r.returncode == 0
 
+
 def clone_azure_attestation_repo():
     run("rm -rf /opt/maa", shell=True)
-    run("git clone https://github.com/Azure-Samples/microsoft-azure-attestation.git /opt/maa", shell=True)
+    run(
+        "git clone https://github.com/Azure-Samples/microsoft-azure-attestation.git /opt/maa",
+        shell=True,
+    )
+
 
 @task
 def install_dcap():
@@ -64,7 +70,7 @@ def install_dcap():
 @task
 def install_sgxsdk():
     print("Installing Intel SGX SDK...")
-    run("mkdir /opt/intel", shell=True) #ensure directory exists
+    run("mkdir /opt/intel", shell=True)  # ensure directory exists
     do_install(
         "https://download.01.org/intel-sgx/sgx-dcap/1.9/linux/distro/ubuntu18.04-server/sgx_linux_x64_sdk_2.12.100.3.bin",
         "sgx_linux_x64_sdk.bin",
@@ -74,10 +80,12 @@ def install_sgxsdk():
     with open("/home/faasm/.bashrc", "a") as f:
         f.write("source {}/sgxddk/environment\n".format(SGX_INSTALL_DIR))
 
+
 @task
 def install_net_core_sdk():
     run("apt update", shell=True)
     run("apt install -y dotnet-sdk-3.1", shell=True)
+
 
 @task
 def install():
@@ -86,21 +94,30 @@ def install():
     else:
         install_dcap()
 
-    if os.path.isfile('/opt/intel/sgxsdk/environment'):
+    if os.path.isfile("/opt/intel/sgxsdk/environment"):
         print("SGX SDK installed. Skipping installation!")
     else:
         install_sgxsdk()
     install_net_core_sdk()
     clone_azure_attestation_repo()
 
+
 @task
 def generate_quotes():
-    run("cd /opt/maa/intel.sdk.attest.sample/genquotes && AZDCAP_DEBUG_LOG_LEVEL=INFO bash ./runall.sh", shell=True)
+    run(
+        "cd /opt/maa/intel.sdk.attest.sample/genquotes && AZDCAP_DEBUG_LOG_LEVEL=INFO bash ./runall.sh",
+        shell=True,
+    )
 
-#verifies quotes with the MAA
+
+# verifies quotes with the MAA
 @task
 def verify_quotes():
-    run("cd /opt/maa/intel.sdk.attest.sample/validatequotes.core && bash ./runall.sh", shell=True)
+    run(
+        "cd /opt/maa/intel.sdk.attest.sample/validatequotes.core && bash ./runall.sh",
+        shell=True,
+    )
+
 
 @task
 def demo():
