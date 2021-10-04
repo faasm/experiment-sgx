@@ -1,5 +1,9 @@
 # SGX Experiments in Faasm
 
+This repository contains instructions to run SGX experiments on Faasm.
+For the moment, though, it contains instructions to provision an SGX-enabled
+VM and test that it can interact with the attestation service in Azure.
+
 ## Quick start from fresh VM
 
 Install the required dependencies:
