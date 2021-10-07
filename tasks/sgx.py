@@ -1,8 +1,12 @@
 from invoke import task
+from os import environ
+from os.path import isfile
 from requests import get
+from shutil import rmtree
 from subprocess import check_output, run
 from tasks.util.env import BIN_DIR, SGX_INSTALL_DIR
-import os
+
+MAA_DEMO_DIR = "/opt/maa"
 
 
 def do_configure(repo_url, write_file, key_url):
@@ -53,7 +57,7 @@ def is_driver_installed(driver):
         r = run("lsmod | grep intel_sgx", shell=True, check=True)
         return r.returncode == 0
     elif driver == "sgx":
-        return os.path.isfile("/opt/intel/sgxsdk/environment")
+        return isfile("/opt/intel/sgxsdk/environment")
     else:
         raise RuntimeError(
             "Don't know how to check if driver '{}' is installed".format(
@@ -63,9 +67,11 @@ def is_driver_installed(driver):
 
 
 def clone_azure_attestation_repo():
-    run("rm -rf /opt/maa", check=True, shell=True)
+    rmtree(MAA_DEMO_DIR)
     run(
-        "git clone https://github.com/Azure-Samples/microsoft-azure-attestation.git /opt/maa",
+        "git clone https://github.com/Azure-Samples/microsoft-azure-attestation.git {}".format(
+            MAA_DEMO_DIR
+        ),
         shell=True,
         check=True,
     )
@@ -118,10 +124,15 @@ def install(ctx):
 
 
 def demo_generate_quotes():
+    new_env = environ.copy()
+    new_env["AZDCAP_DEBUG_LOG_LEVEL"] = "info"
+
     run(
-        "cd /opt/maa/intel.sdk.attest.sample/genquotes && AZDCAP_DEBUG_LOG_LEVEL=INFO bash ./runall.sh",
+        "bash ./runall.sh",
+        cwd="{}/intel.sdk.attest.sample/genquotes".format(MAA_DEMO_DIR),
         shell=True,
         check=True,
+        env=new_env,
     )
 
 
