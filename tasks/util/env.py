@@ -16,7 +16,7 @@ AZURE_SGX_LOCATION = "eastus2"
 AZURE_SGX_VM_NAME = "faasm-sgx-vm"
 AZURE_SGX_VM_IMAGE = "Canonical:UbuntuServer:18_04-lts-gen2:18.04.202109180"
 AZURE_SGX_VM_ADMIN_USERNAME = "faasm"
-AZURE_SGX_VM_SSH_KEY_FILE = "{}/experiments/sgx/pkeys".format(PROJ_ROOT)
+AZURE_SGX_VM_SSH_KEY_FILE = "{}/pkeys".format(PROJ_ROOT)
 
 # Attestation config
 
