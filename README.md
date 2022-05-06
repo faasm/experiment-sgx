@@ -1,67 +1,57 @@
 # SGX Experiments in Faasm
 
-This repository contains instructions to run SGX experiments on Faasm.
-For the moment, though, it contains instructions to provision an SGX-enabled
-VM and test that it can interact with the attestation service in Azure.
-
-The installation scripts follow [Azure's example](https://github.com/Azure-Samples/microsoft-azure-attestation/tree/master/intel.sdk.attest.sample),
-and deviate from it where the instructions need updating.
-In particular, the scripts are very sensitive to code, driver, or OS versions.
-
-## Quick start from fresh VM
-
-Install the required dependencies:
+## Deploy an AKS cluster
 
 ```bash
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y \
-    python3-invoke \
-    python3-pip \
-    python3-venv
+inv cluster.provision --vm Standard_DC4s_v3 --nodes 4 --location eastus2 --sgx
+inv cluster.credentials
 ```
 
-Initialise the virtual environment:
+Deploy the K8s cluster (TODO- automate)
 
 ```bash
+inv knative.install # run twice
+inv knative.deploy --replicas=4 --sgx # will fail in the worker step
+kubectl apply -f ./deploy/k8s-sgx/worker_no_kn.yml
+kubectl apply -f ./deploy/k8s-sgx/worker-lb.yml
+```
+
+Check that the SGX plugins are enabled:
+
+```bash
+# You should see both device and plugin stuff
+kubectl get pods -n kube-system | grep sgx
+```
+
+Manually update IPs and ports in `faasm.ini`
+
+```bash
+kubctl -n faasm get service upload-lb
+kubctl -n faasm get service worker-lb
+```
+
+## Deploy a fresh VM
+
+First create the VM:
+
+```
+cd ~/experiment-base
 source ./bin/workon.sh
+inv vm.create --sgx --region eastus2
 ```
 
-Now configure the APT repos:
+Then provision it:
 
-```bash
-sudo inv sgx.configure
+```
+inv vm.inventory --prefix faasm-sgx
+# May have to comment out the linux-hwe-20.04 in ansible/tasks/base.yml`
+inv vm.setup
 ```
 
-Install the remaining dependencies:
+SSH into the VM and then:
 
-```bash
-sudo apt update && sudo apt install -y \
-    az-dcap-client \
-    dkms \
-    libsgx-quote-ex \
-    libsgx-enclave-common \
-    libsgx-enclave-common-dev \
-    libsgx-dcap-ql \
-    libsgx-dcap-ql-dev \
-    libssl-dev
 ```
-
-Finally, install dependencies. This installes the DCAP driver, the SGX SDK and the .NET Core SDK (if necessary) and clones [this repo](https://github.com/Azure-Samples/microsoft-azure-attestation/).
-
-```bash
-inv sgx.install
-```
-
-And source your environment:
-
-```bash
-source ~/.bashrc
-```
-
-## Running the Demo
-
-To run the demo:
-
-```bash
-inv sgx.demo
+cd ~/code/faasm
+./bin/cli.sh faasm-sgx
+inv dev.cmake --sgx Hardware
 ```
