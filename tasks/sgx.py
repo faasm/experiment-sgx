@@ -120,7 +120,6 @@ def install(ctx):
     else:
         install_sgxsdk()
     install_net_core_sdk()
-    clone_azure_attestation_repo()
 
 
 def demo_generate_quotes():
