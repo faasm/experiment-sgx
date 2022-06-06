@@ -7,13 +7,10 @@ inv cluster.provision --vm Standard_DC4s_v3 --nodes 4 --location eastus2 --sgx
 inv cluster.credentials
 ```
 
-Deploy the K8s cluster (TODO- automate)
+Deploy the K8s cluster
 
 ```bash
-inv knative.install # run twice
-inv knative.deploy --replicas=4 --sgx # will fail in the worker step
-kubectl apply -f ./deploy/k8s-sgx/worker_no_kn.yml
-kubectl apply -f ./deploy/k8s-sgx/worker-lb.yml
+inv knative.deploy --replicas=4 --sgx
 ```
 
 Check that the SGX plugins are enabled:
@@ -21,13 +18,6 @@ Check that the SGX plugins are enabled:
 ```bash
 # You should see both device and plugin stuff
 kubectl get pods -n kube-system | grep sgx
-```
-
-Manually update IPs and ports in `faasm.ini`
-
-```bash
-kubctl -n faasm get service upload-lb
-kubctl -n faasm get service worker-lb
 ```
 
 ## Deploy a fresh VM
@@ -54,4 +44,13 @@ SSH into the VM and then:
 cd ~/code/faasm
 ./bin/cli.sh faasm-sgx
 inv dev.cmake --sgx Hardware
+```
+
+When you are done, delete the VM:
+
+```bash
+# List VMs and copy the relevant name (with sgx)
+inv vm.list-all
+
+inv vm.delete <vm_name>
 ```
