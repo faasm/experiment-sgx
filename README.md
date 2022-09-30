@@ -38,7 +38,7 @@ kubectl get pods -n kube-system | grep sgx
 
 First create the VM:
 
-```
+```bash
 cd ~/experiment-base
 source ./bin/workon.sh
 inv vm.create --sgx --region eastus2
@@ -46,7 +46,7 @@ inv vm.create --sgx --region eastus2
 
 Then provision it:
 
-```
+```bash
 inv vm.inventory --prefix faasm-sgx
 # May have to comment out the linux-hwe-20.04 in ansible/tasks/base.yml`
 inv vm.setup
@@ -54,10 +54,17 @@ inv vm.setup
 
 SSH into the VM and then:
 
-```
+```bash
 cd ~/code/faasm
 ./bin/cli.sh faasm-sgx
 inv dev.cmake --sgx Hardware
+```
+
+Note, if you want to fetch a branch different than master you may have to run:
+
+```bash
+cd ~/code/faasm
+git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
 ```
 
 When you are done, delete the VM:
