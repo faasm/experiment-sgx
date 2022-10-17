@@ -1,6 +1,8 @@
-from os.path import dirname, realpath, join
+from os.path import dirname, expanduser, realpath, join
 
 PROJ_ROOT = dirname(dirname(dirname(realpath(__file__))))
+# FAASM_ROOT_AZ_VM = join(expanduser("~"), "code", "faasm")
+FAASM_ROOT_AZ_VM = join(expanduser("~"), "faasm")
 
 BIN_DIR = join(PROJ_ROOT, "bin")
 
