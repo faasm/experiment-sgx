@@ -41,7 +41,9 @@ def do_single_run(env={}):
     run_cmd = [
         "docker compose exec faasm-cli",
         "bash -c",
-        "'{} /build/faasm/bin/func_runner tless pre'".format(_serialise_dict(env)),
+        "'{} /build/faasm/bin/func_runner tless pre'".format(
+            _serialise_dict(env)
+        ),
     ]
     run_cmd = " ".join(run_cmd)
     print(run_cmd)
