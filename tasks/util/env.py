@@ -24,3 +24,12 @@ AZURE_SGX_VM_SSH_KEY_FILE = "{}/experiments/sgx/pkeys".format(PROJ_ROOT)
 
 AZURE_ATTESTATION_PROVIDER_NAME = "faasmattprov"
 AZURE_ATTESTATION_TYPE = "SGX-IntelSDK"
+
+# Plot aesthetics
+
+TLESS_PLOT_COLORS = [
+    (255 / 255, 162 / 255, 0 / 255),
+    (62 / 255, 0 / 255, 161 / 255),
+    (161 / 255, 0 / 255, 62 / 255),
+    (0 / 255, 69 / 255, 22 / 255),
+]

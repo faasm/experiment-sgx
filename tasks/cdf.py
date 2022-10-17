@@ -1,9 +1,13 @@
+from glob import glob
 from invoke import task
 from os import makedirs
 from os.path import join
-from tasks.util.env import PROJ_ROOT, FAASM_ROOT_AZ_VM
+from tasks.util.env import PROJ_ROOT, FAASM_ROOT_AZ_VM, TLESS_PLOT_COLORS
 from subprocess import run as sp_run
 from time import time
+
+import matplotlib.pyplot as plt
+import pandas as pd
 
 CDF_ROOT = join(PROJ_ROOT, "cdf")
 
@@ -60,7 +64,7 @@ def run(ctx):
     num_repeats = 3
     modes = {
         "tless": {},
-        "tless_no_att": {"AZ_ATTESTATION_PROVIDER_URL": "off"},
+        "tless-no-att": {"AZ_ATTESTATION_PROVIDER_URL": "off"},
         "faasm": {"WASM_VM": "wamr"},
     }
 
@@ -71,9 +75,43 @@ def run(ctx):
             _write_csv_line(m, num, do_single_run(modes[m]))
 
 
+def _read_results():
+    result_dict = {}
+    result_dir = join(CDF_ROOT, "data")
+
+    for csv in glob(join(result_dir, "cdf_*.csv")):
+        workload = csv.split("_")[1][:-4]
+        df = pd.read_csv(csv)
+        result_dict[workload] = df["TimeMs"].to_list()
+
+    return result_dict
+
+
 @task
 def plot(ctx):
     """
     Plot results
     """
-    pass
+    results = _read_results()
+    plot_dir = join(CDF_ROOT, "plot")
+    makedirs(plot_dir, exist_ok=True)
+
+    n_bins = 100
+    fig, ax = plt.subplots(figsize=(6, 3))
+    for ind, workload in enumerate(results):
+        ax.hist(
+            results[workload],
+            n_bins,
+            density=True,
+            cumulative=True,
+            label="{}".format(workload),
+            color=TLESS_PLOT_COLORS[ind],
+        )
+
+    ax.legend()
+    ax.set_xlim(left=0)
+    ax.set_ylim(bottom=0, top=1)
+    ax.set_xlabel("Latency [ms]")
+    ax.set_ylabel("CDF")
+    fig.tight_layout()
+    plt.savefig(join(plot_dir, "cdf.png"), format="png")
