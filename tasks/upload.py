@@ -6,14 +6,17 @@ from tasks.util.faasm import get_faasm_upload_host_port, fetch_latest_wasm
 
 
 @task()
-def wasm(ctx, fetch=False):
+def wasm(ctx, user_in=None, fetch=False):
     """
     Upload the Webassembly files for the TLess image processing pipeline. You
     can fetch the latest version from the toolchain repo using sudo and --fetch
     """
     host, port = get_faasm_upload_host_port()
     for f in TLESS_FUNCTIONS:
-        user = f[0]
+        if user_in:
+            user = f[0]
+        else:
+            user = f[0]
         func = f[1]
         if fetch:
             fetch_latest_wasm(user, func)
