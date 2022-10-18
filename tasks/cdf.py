@@ -45,13 +45,11 @@ def data(ctx):
         sp_run(cmd, shell=True, check=True)
 
 
-
-
-def _init_csv_file(m):
+def _init_csv_file(m, size):
     result_dir = join(CDF_ROOT, "data")
     makedirs(result_dir, exist_ok=True)
 
-    csv_name = "cdf_{}.csv".format(m)
+    csv_name = "sn_{}_{}.csv".format(m, size)
     csv_file = join(result_dir, csv_name)
     with open(csv_file, "w") as out_file:
         out_file.write("NumRun,TimeMs\n")
@@ -72,7 +70,7 @@ def _serialise_dict(d):
     return " ".join(["{}={}".format(k, d[k]) for k in d])
 
 
-def do_single_run(env={}):
+def do_single_run(env={}, size=10):
     """
     Do a single run of the image processing pipeline and return the time
     elapsed in miliseconds
@@ -80,8 +78,9 @@ def do_single_run(env={}):
     run_cmd = [
         "docker compose exec faasm-cli",
         "bash -c",
-        "'{} /build/faasm/bin/func_runner tless pre'".format(
-            _serialise_dict(env)
+        "'{} /build/faasm/bin/func_runner tless pre {}'".format(
+            _serialise_dict(env),
+            size
         ),
     ]
     run_cmd = " ".join(run_cmd)
@@ -104,10 +103,11 @@ def run(ctx):
     }
 
     # Run the experiment
-    for m in modes:
-        _init_csv_file(m)
-        for num in range(num_repeats):
-            _write_csv_line(m, num, do_single_run(modes[m]))
+    for s in [10, 20, 30, 40, 50]:
+        for m in modes:
+            _init_csv_file(m, s)
+            for num in range(num_repeats):
+                _write_csv_line(m, num, do_single_run(modes[m], s))
 
 
 def _read_results():
