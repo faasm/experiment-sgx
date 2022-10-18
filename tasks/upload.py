@@ -26,9 +26,7 @@ def wasm(ctx, user_in=None, fetch=False):
             print("Can not find wasm file: {}".format(wasm_file))
             print("Consider running with `--fetch`: `inv upload.wasm --fetch`")
             raise RuntimeError("WASM function not found")
-        url = "http://{}:{}/f/{}/{}".format(
-            host, port, user, func
-        )
+        url = "http://{}:{}/f/{}/{}".format(host, port, user, func)
         print("Putting function to {}".format(url))
         response = put(url, data=open(wasm_file, "rb"))
         print("Response {}: {}".format(response.status_code, response.text))
@@ -61,6 +59,4 @@ def data(ctx):
             headers={"FilePath": faasm_path},
         )
 
-        print(
-            "Response {}: {}".format(response.status_code, response.text)
-        )
+        print("Response {}: {}".format(response.status_code, response.text))

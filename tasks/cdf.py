@@ -1,7 +1,7 @@
 from glob import glob
 from invoke import task
 from os import makedirs
-from os.path import join
+from os.path import exists, join
 from tasks.util.env import PROJ_ROOT, TLESS_PLOT_COLORS, get_faasm_root
 from subprocess import run as sp_run
 from time import time
@@ -10,6 +10,27 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 CDF_ROOT = join(PROJ_ROOT, "cdf")
+
+
+@task
+def wasm(ctx):
+    for f in TLESS_FUNCTIONS:
+        if user_in:
+            user = f[0]
+        else:
+            user = f[0]
+        func = f[1]
+
+        wasm_file = join(PROJ_ROOT, "wasm", user, func, "function.wasm")
+        faasm_path = join(
+            get_faasm_root(), "dev", "faasm-local", "wasm", "user", "function"
+        )
+        if not exists(faasm_path):
+            makedirs(faasm_path)
+
+        cp_cmd = "cp {} {}".format(wasm_file, faasm_path)
+        print(cp_cmd)
+        run(cp_cmd, shell=True, check=True)
 
 
 def _init_csv_file(m):

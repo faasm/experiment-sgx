@@ -59,7 +59,15 @@ def get_faasm_exec_time_from_json(result_json):
 
 
 def fetch_latest_wasm(user, func):
-    wasm_path = join(get_faasm_root(), "dev", "faasm-local", "wasm", user, func, "function.wasm")
+    wasm_path = join(
+        get_faasm_root(),
+        "dev",
+        "faasm-local",
+        "wasm",
+        user,
+        func,
+        "function.wasm",
+    )
     exp_wasm_path = join(PROJ_ROOT, "wasm", user, func)
     if not exists(wasm_path):
         print("WASM path does not exist: {}".format(wasm_path))
