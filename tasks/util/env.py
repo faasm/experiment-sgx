@@ -54,7 +54,7 @@ TLESS_FAASM_DATA_DIR = "/tless"
 TLESS_DATA_FILES = [
     [
         join(TLESS_DATA_DIR, "sample_image.png"),
-        join(TLESS_FAASM_DATA_DIR, "sample_image.png"),
+        join(TLESS_FAASM_DATA_DIR, "sample_image_1.png"),
     ],
     [
         join(TLESS_DATA_DIR, "grace_hopper.bmp"),
