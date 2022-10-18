@@ -9,11 +9,14 @@ from time import time
 import matplotlib.pyplot as plt
 import pandas as pd
 
-CDF_ROOT = join(PROJ_ROOT, "cdf")
+CDF_ROOT = join(PROJ_ROOT, "weak-scaling")
 
 
 @task
 def wasm(ctx):
+    """
+    Copy the necessary WebAssembly files into the VM
+    """
     for f in TLESS_FUNCTIONS:
         user = f[0]
         func = f[1]
@@ -33,6 +36,9 @@ def wasm(ctx):
 
 @task
 def data(ctx):
+    """
+    Copy the necessary data into the experiment VM
+    """
     faasm_path_base = join(get_faasm_root(), "dev", "faasm-local", "shared", "tless")
     if not exists(faasm_path_base):
         # TODO: this does not work
@@ -55,9 +61,9 @@ def _init_csv_file(m, size):
         out_file.write("NumRun,TimeMs\n")
 
 
-def _write_csv_line(m, num_run, time_elapsed):
+def _write_csv_line(m, size, num_run, time_elapsed):
     result_dir = join(CDF_ROOT, "data")
-    csv_name = "cdf_{}.csv".format(m)
+    csv_name = "sn_{}_{}.csv".format(m, size)
     csv_file = join(result_dir, csv_name)
     with open(csv_file, "a") as out_file:
         out_file.write("{},{}\n".format(num_run, time_elapsed))
@@ -93,7 +99,7 @@ def do_single_run(env={}, size=10):
 @task(default=True)
 def run(ctx):
     """
-    Run CDF-latency experiment
+    Run the weak scaling experiment: scale the problem up
     """
     num_repeats = 3
     modes = {
@@ -107,17 +113,23 @@ def run(ctx):
         for m in modes:
             _init_csv_file(m, s)
             for num in range(num_repeats):
-                _write_csv_line(m, num, do_single_run(modes[m], s))
+                _write_csv_line(m, s, num, do_single_run(modes[m], s))
 
 
 def _read_results():
     result_dict = {}
     result_dir = join(CDF_ROOT, "data")
 
-    for csv in glob(join(result_dir, "cdf_*.csv")):
-        workload = csv.split("_")[1][:-4]
+    for csv in glob(join(result_dir, "sn_*.csv")):
+        workload = csv.split("_")[1]
+        size = csv.split("_")[2][:-4]
         df = pd.read_csv(csv)
-        result_dict[workload] = df["TimeMs"].to_list()
+        if workload not in result_dict:
+            result_dict[workload] = {}
+        result_dict[workload][size] = [
+            df["TimeMs"].mean(),
+            df["TimeMs"].sem(),
+        ]
 
     return result_dict
 
@@ -131,22 +143,27 @@ def plot(ctx):
     plot_dir = join(CDF_ROOT, "plot")
     makedirs(plot_dir, exist_ok=True)
 
-    n_bins = 100
     fig, ax = plt.subplots(figsize=(6, 3))
     for ind, workload in enumerate(results):
-        ax.hist(
-            results[workload],
-            n_bins,
-            density=True,
-            cumulative=True,
+        xs = list(results[workload].keys())
+        xs.sort()
+        ys = [results[workload][x][0] / 1e3 for x in xs]
+        ys_err = [results[workload][x][1] / 1e6 for x in xs]
+
+        ax.errorbar(
+            [int(x) for x in xs],
+            ys,
+            yerr=ys_err,
+            linestyle="-",
+            marker=".",
             label="{}".format(workload),
             color=TLESS_PLOT_COLORS[ind],
         )
 
     ax.legend()
     ax.set_xlim(left=0)
-    ax.set_ylim(bottom=0, top=1)
-    ax.set_xlabel("Latency [ms]")
-    ax.set_ylabel("CDF")
+    ax.set_ylim(bottom=0)
+    ax.set_xlabel("Number of Inference Rounds")
+    ax.set_ylabel("Time Elapsed [s]")
     fig.tight_layout()
-    plt.savefig(join(plot_dir, "cdf.png"), format="png")
+    plt.savefig(join(plot_dir, "weak_scaling.png"), format="png")

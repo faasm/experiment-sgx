@@ -1,13 +1,13 @@
 from invoke import Collection
 
 from . import attestation
-from . import cdf
+from . import weak_scaling
 from . import policy
 from . import upload
 
 ns = Collection(
     attestation,
-    cdf,
     policy,
+    weak_scaling,
     upload,
 )
