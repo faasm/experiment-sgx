@@ -2,7 +2,13 @@ from glob import glob
 from invoke import task
 from os import makedirs
 from os.path import exists, join
-from tasks.util.env import PROJ_ROOT, TLESS_PLOT_COLORS, TLESS_DATA_FILES, TLESS_FUNCTIONS, get_faasm_root
+from tasks.util.env import (
+    PROJ_ROOT,
+    TLESS_PLOT_COLORS,
+    TLESS_DATA_FILES,
+    TLESS_FUNCTIONS,
+    get_faasm_root,
+)
 from subprocess import run as sp_run
 from time import time
 
@@ -39,7 +45,9 @@ def data(ctx):
     """
     Copy the necessary data into the experiment VM
     """
-    faasm_path_base = join(get_faasm_root(), "dev", "faasm-local", "shared", "tless")
+    faasm_path_base = join(
+        get_faasm_root(), "dev", "faasm-local", "shared", "tless"
+    )
     if not exists(faasm_path_base):
         # TODO: this does not work
         makedirs(faasm_path_base)
@@ -85,8 +93,7 @@ def do_single_run(env={}, size=10):
         "docker compose exec faasm-cli",
         "bash -c",
         "'{} /build/faasm/bin/func_runner tless pre {}'".format(
-            _serialise_dict(env),
-            size
+            _serialise_dict(env), size
         ),
     ]
     run_cmd = " ".join(run_cmd)
