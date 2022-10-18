@@ -24,7 +24,7 @@ inv cluster.credentials
 Deploy the Faasm cluster:
 
 ```bash
-inv knative.deploy --replicas=4 --sgx
+inv k8s.deploy --workers=4 --sgx
 ```
 
 Check that the SGX plugins are enabled:

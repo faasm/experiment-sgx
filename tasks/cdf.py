@@ -2,7 +2,7 @@ from glob import glob
 from invoke import task
 from os import makedirs
 from os.path import join
-from tasks.util.env import PROJ_ROOT, FAASM_ROOT_AZ_VM, TLESS_PLOT_COLORS
+from tasks.util.env import PROJ_ROOT, TLESS_PLOT_COLORS, get_faasm_root
 from subprocess import run as sp_run
 from time import time
 
@@ -52,7 +52,7 @@ def do_single_run(env={}):
     run_cmd = " ".join(run_cmd)
     print(run_cmd)
     start_time = time()
-    sp_run(run_cmd, shell=True, check=True, cwd=FAASM_ROOT_AZ_VM)
+    sp_run(run_cmd, shell=True, check=True, cwd=get_faasm_root())
     return (time() - start_time) * 1e3
 
 

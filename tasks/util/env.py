@@ -1,8 +1,9 @@
 from os.path import dirname, expanduser, realpath, join
+from socket import gethostname
 
 PROJ_ROOT = dirname(dirname(dirname(realpath(__file__))))
-# FAASM_ROOT_AZ_VM = join(expanduser("~"), "code", "faasm")
-FAASM_ROOT_AZ_VM = join(expanduser("~"), "faasm")
+FAASM_ROOT_AZ_VM = join(expanduser("~"), "code", "faasm")
+FAASM_ROOT = join(expanduser("~"), "faasm")
 
 BIN_DIR = join(PROJ_ROOT, "bin")
 
@@ -33,3 +34,45 @@ TLESS_PLOT_COLORS = [
     (161 / 255, 0 / 255, 62 / 255),
     (0 / 255, 69 / 255, 22 / 255),
 ]
+
+TLESS_FUNCTIONS = [
+    ["tless", "pre"],
+    ["tless", "imagemagick"],
+    ["tless", "inference"],
+    ["tless", "post_tf"],
+    # ["tless", "post_im"],
+]
+
+# Path for TLess data in this repository
+TLESS_DATA_DIR = join(PROJ_ROOT, "data")
+
+# Path for TLess data to be uplodad in Faasm's filesystem
+TLESS_FAASM_DATA_DIR = "/tless"
+
+# For each data file, we have the origin path (where we copy data from), and
+# the path in Faasm's filesystem we are gonna store the piece of data
+TLESS_DATA_FILES = [
+    [
+        join(TLESS_DATA_DIR, "sample_image.png"),
+        join(TLESS_FAASM_DATA_DIR, "sample_image.png"),
+    ],
+    [
+        join(TLESS_DATA_DIR, "grace_hopper.bmp"),
+        join(TLESS_FAASM_DATA_DIR, "grace_hopper.bmp"),
+    ],
+    [
+        join(TLESS_DATA_DIR, "labels.txt"),
+        join(TLESS_FAASM_DATA_DIR, "labels.txt"),
+    ],
+    [
+        join(TLESS_DATA_DIR, "mobilenet_v1_1.0_224.tflite"),
+        join(TLESS_FAASM_DATA_DIR, "mobilenet_v1.tflite"),
+    ],
+]
+
+
+def get_faasm_root():
+    if "koala" in gethostname():
+        return FAASM_ROOT
+    else:
+        return FAASM_ROOT_AZ_VM
