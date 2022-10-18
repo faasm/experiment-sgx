@@ -1,4 +1,4 @@
-# CDF of the latency to run the pipeline
+# Weak-Scaling Experiment
 
 ## Provision IceLake VM
 

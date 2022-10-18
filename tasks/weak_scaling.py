@@ -35,9 +35,9 @@ def wasm(ctx):
             # this does not work
             makedirs(faasm_path)
 
-        cp_cmd = "cp {} {}".format(wasm_file, faasm_path)
+        cp_cmd = "sudo cp {} {}".format(wasm_file, faasm_path)
         print(cp_cmd)
-        run(cp_cmd, shell=True, check=True)
+        sp_run(cp_cmd, shell=True, check=True)
 
 
 @task
@@ -113,6 +113,7 @@ def run(ctx):
         "tless": {},
         "tless-no-att": {"AZ_ATTESTATION_PROVIDER_URL": "off"},
         "faasm": {"WASM_VM": "wamr"},
+        "strawman": {"ENCLAVE_ISOLATION_MODE": "faaslet"},
     }
 
     # Run the experiment
