@@ -2,7 +2,7 @@ from glob import glob
 from invoke import task
 from os import makedirs
 from os.path import exists, join
-from tasks.util.env import PROJ_ROOT, TLESS_PLOT_COLORS, get_faasm_root
+from tasks.util.env import PROJ_ROOT, TLESS_PLOT_COLORS, TLESS_DATA_FILES, TLESS_FUNCTIONS, get_faasm_root
 from subprocess import run as sp_run
 from time import time
 
@@ -15,22 +15,36 @@ CDF_ROOT = join(PROJ_ROOT, "cdf")
 @task
 def wasm(ctx):
     for f in TLESS_FUNCTIONS:
-        if user_in:
-            user = f[0]
-        else:
-            user = f[0]
+        user = f[0]
         func = f[1]
 
         wasm_file = join(PROJ_ROOT, "wasm", user, func, "function.wasm")
         faasm_path = join(
-            get_faasm_root(), "dev", "faasm-local", "wasm", "user", "function"
+            get_faasm_root(), "dev", "faasm-local", "wasm", user, func
         )
         if not exists(faasm_path):
+            # this does not work
             makedirs(faasm_path)
 
         cp_cmd = "cp {} {}".format(wasm_file, faasm_path)
         print(cp_cmd)
         run(cp_cmd, shell=True, check=True)
+
+
+@task
+def data(ctx):
+    faasm_path_base = join(get_faasm_root(), "dev", "faasm-local", "shared", "tless")
+    if not exists(faasm_path_base):
+        # TODO: this does not work
+        makedirs(faasm_path_base)
+    for df in TLESS_DATA_FILES:
+        host_path = df[0]
+        faasm_path = join(faasm_path_base, df[1].split("/")[-1])
+        cmd = "sudo cp {} {}".format(host_path, faasm_path)
+        print(cmd)
+        sp_run(cmd, shell=True, check=True)
+
+
 
 
 def _init_csv_file(m):
