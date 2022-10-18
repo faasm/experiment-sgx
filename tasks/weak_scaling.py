@@ -164,7 +164,7 @@ def plot(ctx):
             yerr=ys_err,
             linestyle="-",
             marker=".",
-            label="{}".format(workload),
+            label="{}".format(workload if workload != "strawman" else "one-func-one-tee"),
             color=TLESS_PLOT_COLORS[ind],
         )
 
