@@ -1,7 +1,9 @@
+from glob import glob
 from invoke import task
 from json import loads as json_loads
 from os import makedirs
 from os.path import exists, join
+from pandas import read_csv
 from pprint import pprint
 from requests import post, put
 from tasks.util.faasm import (
@@ -15,8 +17,11 @@ from tasks.util.env import (
     PROJ_ROOT,
     TLESS_DATA_FILES,
     TLESS_FUNCTIONS,
+    TLESS_PLOT_COLORS,
 )
 from time import sleep
+
+import matplotlib.pyplot as plt
 
 SS_ROOT = join(PROJ_ROOT, "strong-scaling")
 NUM_NODES = 7
@@ -143,7 +148,6 @@ def do_single_run(np):
         print("Expected: {} - Got: {}", np, len(msg_ids))
         raise RuntimeError("Not enough results")
 
-
     # Poll for the execution times
     poll_interval = 2
     while len(exec_times) != np:
@@ -197,6 +201,50 @@ def run(ctx, mode="tless", parallel_pipelines=None):
                 _write_csv_line(mode, np, rep, exec_time)
 
 
+def _load_results():
+    result_dict = {}
+    result_dir = join(SS_ROOT, "data")
+    for csv in glob(join(result_dir, "ss_*.csv")):
+        workload = csv.split("_")[1]
+        np = csv.split("_")[2][:-4]
+        df = read_csv(csv)
+        if workload not in result_dict:
+            result_dict[workload] = {}
+        result_dict[workload][np] = [
+            df["TimeSec"].mean(),
+            df["TimeSec"].sem(),
+        ]
+
+
 @task
 def plot(ctx):
-    pass
+    results = _load_results()
+    plot_dir = join(SS_ROOT, "plot")
+    makedirs(plot_dir, exist_ok=True)
+
+    fig, ax = plt.subplots(figsize=(6, 3))
+    for ind, workload in enumerate(results):
+        xs = list(results[workload].keys())
+        xs.sort()
+        ys = [results[workload][x][0] / 1e3 for x in xs]
+        ys_err = [results[workload][x][1] / 1e6 for x in xs]
+
+        ax.errorbar(
+            [int(x) for x in xs],
+            ys,
+            yerr=ys_err,
+            linestyle="-",
+            marker=".",
+            label="{}".format(
+                workload if workload != "strawman" else "one-func-one-tee"
+            ),
+            color=TLESS_PLOT_COLORS[ind],
+        )
+
+    ax.legend()
+    ax.set_xlim(left=0)
+    ax.set_ylim(bottom=0)
+    ax.set_xlabel("Number of Concurrent Applications")
+    ax.set_ylabel("Average Application Exec. Time [s]")
+    fig.tight_layout()
+    plt.savefig(join(plot_dir, "strong_scaling.png"), format="png")
