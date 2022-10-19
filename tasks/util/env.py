@@ -26,7 +26,9 @@ AZURE_SGX_VM_SSH_KEY_FILE = "{}/experiments/sgx/pkeys".format(PROJ_ROOT)
 AZURE_ATTESTATION_PROVIDER_NAME = "faasmattprov"
 AZURE_ATTESTATION_TYPE = "SGX-IntelSDK"
 
+# ----------
 # Plot aesthetics
+# ----------
 
 TLESS_PLOT_COLORS = [
     (255 / 255, 162 / 255, 0 / 255),
@@ -35,12 +37,23 @@ TLESS_PLOT_COLORS = [
     (0 / 255, 69 / 255, 22 / 255),
 ]
 
+TLESS_LINE_STYLES = [
+    "-",
+    "--",
+    "-.",
+    ":",
+]
+
+# ----------
+# TLess Stuff
+# ----------
+
 TLESS_FUNCTIONS = [
-    ["tless", "pre"],
-    ["tless", "imagemagick"],
-    ["tless", "inference"],
-    ["tless", "post_tf"],
-    # ["tless", "post_im"],
+#     ["tless", "pre"],
+#     ["tless", "imagemagick"],
+#     ["tless", "inference"],
+#     ["tless", "post_tf"],
+    ["tless", "transcode"],
 ]
 
 # Path for TLess data in this repository
@@ -67,6 +80,10 @@ TLESS_DATA_FILES = [
     [
         join(TLESS_DATA_DIR, "mobilenet_v1_1.0_224.tflite"),
         join(TLESS_FAASM_DATA_DIR, "mobilenet_v1.tflite"),
+    ],
+    [
+        join(TLESS_DATA_DIR, "sample_video.mpeg"),
+        join(TLESS_FAASM_DATA_DIR, "sample_video.mpeg"),
     ],
 ]
 

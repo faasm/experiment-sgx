@@ -2,22 +2,21 @@ from glob import glob
 from invoke import task
 from json import loads as json_loads
 from os import makedirs
-from os.path import exists, join
+from os.path import join
 from pandas import read_csv
 from pprint import pprint
-from requests import post, put
+from requests import post
+from subprocess import run as sp_run
 from tasks.util.faasm import (
-    fetch_latest_wasm,
     flush_hosts,
     get_faasm_exec_time_from_json,
     get_faasm_invoke_host_port,
-    get_faasm_upload_host_port,
 )
 from tasks.util.env import (
     PROJ_ROOT,
-    TLESS_DATA_FILES,
-    TLESS_FUNCTIONS,
+    TLESS_LINE_STYLES,
     TLESS_PLOT_COLORS,
+    get_faasm_root,
 )
 from time import sleep
 
@@ -27,68 +26,27 @@ SS_ROOT = join(PROJ_ROOT, "strong-scaling")
 NUM_NODES = 7
 NUM_CORES_PER_NODE = 4
 modes = {
-    "tless": {},
-    "tless-no-att": {"AZ_ATTESTATION_PROVIDER_URL": "off"},
-    "faasm": {"WASM_VM": "wamr"},
-    "strawman": {"ENCLAVE_ISOLATION_MODE": "faaslet"},
+    "tless": {
+        "WASM_VM": "sgx",
+        "AZ_ATESTATION_PROVIDER_URL": "https://faasmattprov.eus2.attest.azure.net",
+        "ENCLAVE_ISOLATION_MODE": "global",
+    },
+    "tless-no-att": {
+        "WASM_VM": "sgx",
+        "AZ_ATTESTATION_PROVIDER_URL": "off",
+        "ENCLAVE_ISOLATION_MODE": "global",
+    },
+    "faasm": {
+        "WASM_VM": "wamr",
+        "AZ_ATESTATION_PROVIDER_URL": "https://faasmattprov.eus2.attest.azure.net",
+        "ENCLAVE_ISOLATION_MODE": "global",
+    },
+    "strawman": {
+        "WASM_VM": "sgx",
+        "AZ_ATESTATION_PROVIDER_URL": "https://faasmattprov.eus2.attest.azure.net",
+        "ENCLAVE_ISOLATION_MODE": "faaslet"
+    },
 }
-
-
-@task()
-def wasm(ctx, user_in=None, fetch=False):
-    """
-    Upload the Webassembly files for the TLess image processing pipeline. You
-    can fetch the latest version from the toolchain repo using sudo and --fetch
-    """
-    host, port = get_faasm_upload_host_port()
-    for f in TLESS_FUNCTIONS:
-        if user_in:
-            user = f[0]
-        else:
-            user = f[0]
-        func = f[1]
-        if fetch:
-            fetch_latest_wasm(user, func)
-
-        wasm_file = join(PROJ_ROOT, "wasm", user, func, "function.wasm")
-        if not exists(wasm_file):
-            print("Can not find wasm file: {}".format(wasm_file))
-            print("Consider running with `--fetch`: `inv upload.wasm --fetch`")
-            raise RuntimeError("WASM function not found")
-        url = "http://{}:{}/f/{}/{}".format(host, port, user, func)
-        print("Putting function to {}".format(url))
-        response = put(url, data=open(wasm_file, "rb"))
-        print("Response {}: {}".format(response.status_code, response.text))
-
-
-@task
-def data(ctx):
-    """
-    Upload the auxiliary data files for the TLess image processing pipeline
-    """
-    host, port = get_faasm_upload_host_port()
-    url = "http://{}:{}/file".format(host, port)
-
-    for df in TLESS_DATA_FILES:
-        host_path = df[0]
-        faasm_path = df[1]
-
-        if not exists(host_path):
-            print("Did not find data at {}".format(host_path))
-            raise RuntimeError("Did not find data file")
-
-        print(
-            "Uploading TLess data ({}) to {} ({})".format(
-                host_path, url, faasm_path
-            )
-        )
-        response = put(
-            url,
-            data=open(host_path, "rb"),
-            headers={"FilePath": faasm_path},
-        )
-
-        print("Response {}: {}".format(response.status_code, response.text))
 
 
 def _init_csv_file(m, np):
@@ -109,7 +67,7 @@ def _write_csv_line(m, np, num_run, time_sec):
         out_file.write("{},{}\n".format(num_run, time_sec))
 
 
-def do_single_run(np):
+def do_single_run(mode, np, rep):
     """
     Run `np` pipelines concurrently. Issue `np` asynchronous execution requests
     and poll the messages until all of them have finished. Return the execution
@@ -119,7 +77,6 @@ def do_single_run(np):
     url = "http://{}:{}".format(host, port)
     num_inference_rounds = 50
     msg_ids = set()
-    exec_times = []
 
     # Post `np` asynchronous execution requests
     for _ in range(np):
@@ -143,6 +100,8 @@ def do_single_run(np):
         print("Response: {}".format(response.text))
         msg_ids.add(int(response.text.strip()))
 
+        sleep(2)
+
     if len(msg_ids) != np:
         print("Error: have not gathered enough message ids")
         print("Expected: {} - Got: {}", np, len(msg_ids))
@@ -150,7 +109,7 @@ def do_single_run(np):
 
     # Poll for the execution times
     poll_interval = 2
-    while len(exec_times) != np:
+    while len(msg_ids) != 0:
         for msg_id in msg_ids:
             sleep(poll_interval)
 
@@ -160,45 +119,94 @@ def do_single_run(np):
                 "status": True,
                 "id": msg_id,
             }
+            print("Posting to {} msg:".format(url))
+            pprint(status_msg)
             response = post(url, json=status_msg)
+            print("Response: {}".format(response.text))
 
-            if response.text.startswith("FAILED"):
-                raise RuntimeError("Call failed")
+            if response.text.startswith("RUNNING"):
+                continue
+            elif response.text.startswith("FAILED"):
+                print("WARNING: Call failed!")
+                msg_ids.remove(msg_id)
+                break
             elif not response.text:
-                raise RuntimeError("Empty status response")
+                print("WARNING: Empty response")
+                msg_ids.remove(msg_id)
+                break
             else:
                 # First, get the result from the response text
                 result_json = json_loads(response.text)
-                exec_times.append(get_faasm_exec_time_from_json(result_json))
+                _write_csv_line(mode, np, rep, get_faasm_exec_time_from_json(result_json))
 
                 # If we reach this point it means the call has succeeded
                 msg_ids.remove(msg_id)
+                break
 
-        print("Waiting for: [{}]".format(",".join(list(msg_ids))))
-
-    # Finally, return the execution times
-    return exec_times
+        print("Waiting for: [{}]".format(",".join([str(mid) for mid in msg_ids])))
 
 
-@task
-def run(ctx, mode="tless", parallel_pipelines=None):
+@task(default=True)
+def run(ctx, mode, pp=None, repeats=3):
+    _init_csv_file(mode, pp)
+
     # First, flush the host state
     flush_hosts()
 
     # Experiment Parameters
-    if parallel_pipelines:
-        num_pipelines = [parallel_pipelines]
+    if pp:
+        num_pipelines = [int(pp)]
     else:
         num_pipelines = [1, 2, 3, 4, 5]
-    # Do we need more than one repeat if we are already doing the average?
-    num_repeats = 3
 
     # Run the experiment
     for np in num_pipelines:
-        for rep in range(num_repeats):
-            exec_times = do_single_run(np)
-            for exec_time in exec_times:
-                _write_csv_line(mode, np, rep, exec_time)
+        for rep in range(repeats):
+            exec_times = do_single_run(mode, np, rep)
+            # for exec_time in exec_times:
+
+        # Flush between different number of parallel pipelines
+        flush_hosts()
+
+
+@task()
+def patch(ctx, mode="tless"):
+    """
+    Patch a kubernetes deployment for a system mode
+    """
+    k8s_files = join(get_faasm_root(), "deploy", "k8s-sgx")
+
+    # First replace the WASM VM if necessary
+    if mode == "faasm":
+        wasm_vm_not = "sgx"
+        wasm_vm = "wamr"
+    else:
+        wasm_vm_not = "wamr"
+        wasm_vm = "sgx"
+    find_cmd = [
+        "find {}".format(k8s_files),
+        "-type f",
+        "| xargs sed -i",
+        "'s/value: \"{}\"/value: \"{}\"/g'".format(wasm_vm_not, wasm_vm),
+    ]
+    find_cmd = " ".join(find_cmd)
+    print(find_cmd)
+    sp_run(find_cmd, shell=True, check=True)
+
+    # Second replace the attestation service url
+    if mode == "faasm":
+        return
+    elif mode == "tless-no-att":
+        att_serv_not = "https://faasmattprov.eus2.attest.azure.net"
+        att_serv = "off"
+    find_cmd = [
+        "find {}".format(k8s_files),
+        "-type f",
+        "| xargs sed -i",
+        "'s/value: \"{}\"/value: \"{}\"/g'".format(wasm_vm_not, wasm_vm),
+    ]
+    find_cmd = " ".join(find_cmd)
+    print(find_cmd)
 
 
 def _load_results():
@@ -214,6 +222,7 @@ def _load_results():
             df["TimeSec"].mean(),
             df["TimeSec"].sem(),
         ]
+    return result_dict
 
 
 @task
@@ -226,14 +235,14 @@ def plot(ctx):
     for ind, workload in enumerate(results):
         xs = list(results[workload].keys())
         xs.sort()
-        ys = [results[workload][x][0] / 1e3 for x in xs]
-        ys_err = [results[workload][x][1] / 1e6 for x in xs]
+        ys = [results[workload][x][0] for x in xs]
+        ys_err = [results[workload][x][1] for x in xs]
 
         ax.errorbar(
             [int(x) for x in xs],
             ys,
             yerr=ys_err,
-            linestyle="-",
+            linestyle=TLESS_LINE_STYLES[ind],
             marker=".",
             label="{}".format(
                 workload if workload != "strawman" else "one-func-one-tee"
@@ -247,4 +256,4 @@ def plot(ctx):
     ax.set_xlabel("Number of Concurrent Applications")
     ax.set_ylabel("Average Application Exec. Time [s]")
     fig.tight_layout()
-    plt.savefig(join(plot_dir, "strong_scaling.png"), format="png")
+    plt.savefig(join(plot_dir, "strong_scaling.pdf"), format="pdf")
