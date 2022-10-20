@@ -53,7 +53,10 @@ TLESS_FUNCTIONS = [
 #     ["tless", "imagemagick"],
 #     ["tless", "inference"],
 #     ["tless", "post_tf"],
-    ["tless", "transcode"],
+    # ["tless", "transcode"],
+    # ["tless", "ffmpeg-chain"],
+    ["tless", "noop"],
+    ["tless", "noop-chain"],
 ]
 
 # Path for TLess data in this repository

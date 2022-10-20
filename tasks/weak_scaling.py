@@ -2,70 +2,25 @@ from glob import glob
 from invoke import task
 from json import loads as json_loads
 from os import makedirs
-from os.path import exists, join
+from os.path import join
 from pprint import pprint
 from requests import post
 from tasks.util.env import (
     PROJ_ROOT,
     TLESS_PLOT_COLORS,
-    TLESS_DATA_FILES,
-    TLESS_FUNCTIONS,
     TLESS_LINE_STYLES,
-    get_faasm_root,
 )
 from tasks.util.faasm import (
     flush_hosts,
     get_faasm_exec_time_from_json,
     get_faasm_invoke_host_port,
 )
-from subprocess import run as sp_run
 from time import sleep
 
 import matplotlib.pyplot as plt
 import pandas as pd
 
 WS_ROOT = join(PROJ_ROOT, "weak-scaling")
-
-
-@task
-def wasm(ctx):
-    """
-    Copy the necessary WebAssembly files into the VM
-    """
-    for f in TLESS_FUNCTIONS:
-        user = f[0]
-        func = f[1]
-
-        wasm_file = join(PROJ_ROOT, "wasm", user, func, "function.wasm")
-        faasm_path = join(
-            get_faasm_root(), "dev", "faasm-local", "wasm", user, func
-        )
-        if not exists(faasm_path):
-            # this does not work
-            makedirs(faasm_path)
-
-        cp_cmd = "sudo cp {} {}".format(wasm_file, faasm_path)
-        print(cp_cmd)
-        sp_run(cp_cmd, shell=True, check=True)
-
-
-@task
-def data(ctx):
-    """
-    Copy the necessary data into the experiment VM
-    """
-    faasm_path_base = join(
-        get_faasm_root(), "dev", "faasm-local", "shared", "tless"
-    )
-    if not exists(faasm_path_base):
-        # TODO: this does not work
-        makedirs(faasm_path_base)
-    for df in TLESS_DATA_FILES:
-        host_path = df[0]
-        faasm_path = join(faasm_path_base, df[1].split("/")[-1])
-        cmd = "sudo cp {} {}".format(host_path, faasm_path)
-        print(cmd)
-        sp_run(cmd, shell=True, check=True)
 
 
 def _init_csv_file(m, size):
