@@ -10,7 +10,7 @@ from subprocess import run as sp_run
 from tasks.util.env import (
     PROJ_ROOT,
     TLESS_PLOT_COLORS,
-    TLESS_LINE_STYLES,
+    TLESS_HATCH_STYLES,
     TLESS_MODES,
     get_faasm_root,
 )
@@ -170,7 +170,8 @@ def plot(ctx):
             width=w,
             yerr=ys_err,
             label="{}".format(workload if workload != "strawman" else "one-func-one-tee"),
-            color=TLESS_PLOT_COLORS[ind],
+            hatch=TLESS_HATCH_STYLES[ind],
+            edgecolor="black",
         )
 
     ax.legend()

@@ -44,6 +44,13 @@ TLESS_LINE_STYLES = [
     ":",
 ]
 
+TLESS_HATCH_STYLES = [
+    '--',
+    '+',
+    'x',
+    '\\',
+]
+
 # ----------
 # TLess Stuff
 # ----------
