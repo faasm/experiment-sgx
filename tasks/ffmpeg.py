@@ -156,7 +156,7 @@ def plot(ctx):
 
     # fig, (ax1, ax2) = subplots(nrows=1, ncols=2, figsize=(6, 3))
     fig, ax = subplots(figsize=(6, 3))
-    x = [1, 2, 3, 4]
+    x = [1, 2, 3, 4, 5]
     funcs = ["noop", "noop-chain", "ffmpeg", "ffmpeg-chain"]
     w = 0.3
     for ind, workload in enumerate(results):
@@ -169,12 +169,12 @@ def plot(ctx):
             ys,
             width=w,
             yerr=ys_err,
-            label="{}".format(workload),
+            label="{}".format(workload if workload != "strawman" else "one-func-one-tee"),
             color=TLESS_PLOT_COLORS[ind],
         )
 
     ax.legend()
-    ax.set_xticks(x)
+    ax.set_xticks([_ for _ in range(len(funcs))])
     ax.set_xticklabels(funcs)
     ax.set_xlim(left=0)
     ax.set_ylim(bottom=0)
