@@ -6,10 +6,13 @@ from os.path import join
 from pandas import read_csv
 from pprint import pprint
 from requests import post
+from subprocess import run as sp_run
 from tasks.util.env import (
     PROJ_ROOT,
     TLESS_PLOT_COLORS,
     TLESS_LINE_STYLES,
+    TLESS_MODES,
+    get_faasm_root,
 )
 from tasks.util.faasm import (
     flush_hosts,
@@ -39,59 +42,89 @@ def _write_csv_line(mode, wload, num_run, time_elapsed):
         out_file.write("{},{}\n".format(num_run, time_elapsed))
 
 
+# def do_single_run(mode, wload, num_run):
+#     """
+#     Do a single run of the FFmpeg microbench and measure the time elapsed in
+#     miliseconds
+#     """
+#     host, port = get_faasm_invoke_host_port()
+#     url = "http://{}:{}".format(host, port)
+#
+#     # Post `np` asynchronous execution requests
+#     cmdline = "file:faasm://tless/sample_video.mpeg file:faasm://tless/sample_video_out.mpeg"
+#     msg = {
+#         "user": "tless",
+#         "function": wload if wload != "ffmpeg" else "transcode",
+#         "cmdline": cmdline,
+#     }
+#     print("Posting to {} msg:".format(url))
+#     pprint(msg)
+#
+#     start_time = time()
+#     response = post(url, json=msg, timeout=None)
+#     elapsed_time = time() - start_time
+#     # Get the async message id
+#     if response.status_code != 200:
+#         print(
+#             "WARNING: request failed: {}:\n{}".format(
+#                 response.status_code, response.text
+#             )
+#         )
+#         return
+#
+#     _write_csv_line(mode, wload, num_run, elapsed_time * 1000)
+
+
+def _serialise_dict(d):
+    """
+    Helper function to serialise a dictionary into a string of env. variables
+    """
+    return " ".join(["{}={}".format(k, d[k]) for k in d])
+
+
 def do_single_run(mode, wload, num_run):
     """
-    Do a single run of the FFmpeg microbench and measure the time elapsed in
-    miliseconds
+    Do a single run of the image processing pipeline and return the time
+    elapsed in miliseconds
     """
-    host, port = get_faasm_invoke_host_port()
-    url = "http://{}:{}".format(host, port)
-
-    # Post `np` asynchronous execution requests
-    cmdline = "file:faasm://tless/sample_video.mpeg file:faasm://tless/sample_video_out.mpeg"
-    msg = {
-        "user": "tless",
-        "function": wload if wload != "ffmpeg" else "transcode",
-        "cmdline": cmdline,
-    }
-    print("Posting to {} msg:".format(url))
-    pprint(msg)
-
+    run_cmd = [
+        "docker compose exec faasm-cli",
+        "bash -c",
+        "'{} /build/faasm/bin/func_runner tless {}'".format(
+            _serialise_dict(TLESS_MODES[mode]), wload
+        ),
+    ]
+    run_cmd = " ".join(run_cmd)
+    print(run_cmd)
     start_time = time()
-    response = post(url, json=msg, timeout=None)
+    sp_run(run_cmd, shell=True, check=True, cwd=get_faasm_root())
     elapsed_time = time() - start_time
-    # Get the async message id
-    if response.status_code != 200:
-        print(
-            "WARNING: request failed: {}:\n{}".format(
-                response.status_code, response.text
-            )
-        )
-        return
-
     _write_csv_line(mode, wload, num_run, elapsed_time * 1000)
+    return (time() - start_time) * 1e3
 
 
 @task(default=True)
-def run(ctx, mode, wl=None, repeats=10):
+def run(ctx, mode=None, wl=None, repeats=10):
     """
-    Run the FFmpeg micro benchmark
+    Run the FFmpeg micro benchmark in a confidential VM
     """
-    flush_hosts()
+    if mode:
+        modes = [mode]
+    else:
+        modes = list(TLESS_MODES.keys())
     if wl:
         workloads = [wl]
     else:
         workloads = ["noop", "ffmpeg", "noop-chain", "ffmpeg-chain"]
 
     # Run the experiment
-    for wload in workloads:
-        _init_csv_file(mode, wload)
+    for _mode in modes:
+        for wload in workloads:
+            _init_csv_file(_mode, wload)
 
-        for num in range(repeats):
-            do_single_run(mode, wload, num)
+            for num in range(repeats):
+                do_single_run(_mode, wload, num)
             sleep(2)
-
-        flush_hosts()
 
 
 def _read_results():

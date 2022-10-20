@@ -90,6 +90,31 @@ TLESS_DATA_FILES = [
     ],
 ]
 
+# Different TLess modes with their environment variables
+TLESS_MODES = {
+    "tless": {
+        "WASM_VM": "sgx",
+        "AZ_ATESTATION_PROVIDER_URL": "https://faasmattprov.eus2.attest.azure.net",
+        "ENCLAVE_ISOLATION_MODE": "global",
+    },
+    "tless-no-att": {
+        "WASM_VM": "sgx",
+        "AZ_ATTESTATION_PROVIDER_URL": "off",
+        "ENCLAVE_ISOLATION_MODE": "global",
+    },
+    "faasm": {
+        "WASM_VM": "wamr",
+        "AZ_ATESTATION_PROVIDER_URL": "https://faasmattprov.eus2.attest.azure.net",
+        "ENCLAVE_ISOLATION_MODE": "global",
+    },
+    "strawman": {
+        "WASM_VM": "sgx",
+        "AZ_ATESTATION_PROVIDER_URL": "https://faasmattprov.eus2.attest.azure.net",
+        "ENCLAVE_ISOLATION_MODE": "faaslet"
+    },
+}
+
+
 
 def get_faasm_root():
     if "koala" in gethostname():
