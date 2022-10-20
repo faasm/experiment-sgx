@@ -101,7 +101,9 @@ def do_single_run(mode, size, num_run):
         else:
             # First, get the result from the response text
             result_json = json_loads(response.text)
-            _write_csv_line(mode, size, num_run, get_faasm_exec_time_from_json(result_json))
+            _write_csv_line(
+                mode, size, num_run, get_faasm_exec_time_from_json(result_json)
+            )
             break
 
 

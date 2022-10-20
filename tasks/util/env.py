@@ -45,10 +45,10 @@ TLESS_LINE_STYLES = [
 ]
 
 TLESS_HATCH_STYLES = [
-    '--',
-    '+',
-    'x',
-    '\\',
+    "--",
+    "+",
+    "x",
+    "\\",
 ]
 
 # ----------
@@ -56,10 +56,10 @@ TLESS_HATCH_STYLES = [
 # ----------
 
 TLESS_FUNCTIONS = [
-#     ["tless", "pre"],
-#     ["tless", "imagemagick"],
-#     ["tless", "inference"],
-#     ["tless", "post_tf"],
+    #     ["tless", "pre"],
+    #     ["tless", "imagemagick"],
+    #     ["tless", "inference"],
+    #     ["tless", "post_tf"],
     # ["tless", "transcode"],
     # ["tless", "ffmpeg-chain"],
     ["tless", "noop"],
@@ -117,10 +117,9 @@ TLESS_MODES = {
     "strawman": {
         "WASM_VM": "sgx",
         "AZ_ATESTATION_PROVIDER_URL": "https://faasmattprov.eus2.attest.azure.net",
-        "ENCLAVE_ISOLATION_MODE": "faaslet"
+        "ENCLAVE_ISOLATION_MODE": "faaslet",
     },
 }
-
 
 
 def get_faasm_root():

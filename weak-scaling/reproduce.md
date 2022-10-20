@@ -1,5 +1,11 @@
 # Weak-Scaling Experiment
 
+NOTE: make sure we re-attest the enclave at the first function of each run!
+
+We run this experiment on a Kubernetes cluster. Unfortunately, each different
+system configuration requires a re-deployment of the system's deployment files
+(not re-provisioning machines).
+
 ## Provision IceLake VM
 
 To create the VM, run:

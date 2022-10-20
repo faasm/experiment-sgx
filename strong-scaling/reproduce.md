@@ -1,5 +1,7 @@
 # Strong-Scaling Experiment
 
+NOTE: make sure we re-attest the enclave at the first function of each run!
+
 ## Provision the Kubernetes Cluster with IceLake Machines
 
 To create the cluster, run:

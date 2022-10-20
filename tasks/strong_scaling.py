@@ -44,7 +44,7 @@ modes = {
     "strawman": {
         "WASM_VM": "sgx",
         "AZ_ATESTATION_PROVIDER_URL": "https://faasmattprov.eus2.attest.azure.net",
-        "ENCLAVE_ISOLATION_MODE": "faaslet"
+        "ENCLAVE_ISOLATION_MODE": "faaslet",
     },
 }
 
@@ -137,13 +137,17 @@ def do_single_run(mode, np, rep):
             else:
                 # First, get the result from the response text
                 result_json = json_loads(response.text)
-                _write_csv_line(mode, np, rep, get_faasm_exec_time_from_json(result_json))
+                _write_csv_line(
+                    mode, np, rep, get_faasm_exec_time_from_json(result_json)
+                )
 
                 # If we reach this point it means the call has succeeded
                 msg_ids.remove(msg_id)
                 break
 
-        print("Waiting for: [{}]".format(",".join([str(mid) for mid in msg_ids])))
+        print(
+            "Waiting for: [{}]".format(",".join([str(mid) for mid in msg_ids]))
+        )
 
 
 @task(default=True)
@@ -187,7 +191,7 @@ def patch(ctx, mode="tless"):
         "find {}".format(k8s_files),
         "-type f",
         "| xargs sed -i",
-        "'s/value: \"{}\"/value: \"{}\"/g'".format(wasm_vm_not, wasm_vm),
+        '\'s/value: "{}"/value: "{}"/g\''.format(wasm_vm_not, wasm_vm),
     ]
     find_cmd = " ".join(find_cmd)
     print(find_cmd)
@@ -203,7 +207,7 @@ def patch(ctx, mode="tless"):
         "find {}".format(k8s_files),
         "-type f",
         "| xargs sed -i",
-        "'s/value: \"{}\"/value: \"{}\"/g'".format(wasm_vm_not, wasm_vm),
+        '\'s/value: "{}"/value: "{}"/g\''.format(wasm_vm_not, wasm_vm),
     ]
     find_cmd = " ".join(find_cmd)
     print(find_cmd)

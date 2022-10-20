@@ -156,30 +156,34 @@ def plot(ctx):
 
     # fig, (ax1, ax2) = subplots(nrows=1, ncols=2, figsize=(6, 3))
     fig, ax = subplots(figsize=(6, 3))
-    x = [1, 2, 3, 4, 5]
+    x = [1, 2, 3, 4]
     funcs = ["noop", "noop-chain", "ffmpeg", "ffmpeg-chain"]
-    w = 0.3
-    for ind, workload in enumerate(results):
-        xs = [_x + w*(ind - 0.5) for _x in x]
-        ys = [results[workload][func][0] for func in funcs]
-        ys_err = [results[workload][func][1] for func in funcs]
+    w = 0.2
+    for ind, workload in enumerate(
+        ["faasm", "tless-no-att", "tless", "strawman"]
+    ):
+        xs = [_x + w * (ind - 0.5) for _x in x]
+        ys = [results[workload][func][0] / 1e3 for func in funcs]
+        ys_err = [results[workload][func][1] / 1e3 for func in funcs]
 
         ax.bar(
             xs,
             ys,
             width=w,
             yerr=ys_err,
-            label="{}".format(workload if workload != "strawman" else "one-func-one-tee"),
+            label="{}".format(
+                workload if workload != "strawman" else "one-func-one-tee"
+            ),
             hatch=TLESS_HATCH_STYLES[ind],
+            color=TLESS_PLOT_COLORS[ind],
             edgecolor="black",
         )
 
     ax.legend()
-    ax.set_xticks([_ for _ in range(len(funcs))])
+    ax.set_xticks([i + 1.25 for i in range(len(funcs))])
     ax.set_xticklabels(funcs)
-    ax.set_xlim(left=0)
+    ax.set_xlim(left=0.5)
     ax.set_ylim(bottom=0)
-    # ax.set_xlabel("Number of Inference Rounds")
-    ax.set_ylabel("Time Elapsed [ms]")
+    ax.set_ylabel("Time Elapsed [s]")
     fig.tight_layout()
     savefig(join(plot_dir, "ffmpeg_ubench.pdf"), format="pdf")
